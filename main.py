@@ -20,19 +20,29 @@ def user_fill_sudoku(sudoku):
                 sudoku.field[i][j].setNum(input)
     print(sudoku)
 
-if __name__== "__main__":
-    sudoku = Sudoku("example_puzzles/s05a.txt")
-    print(sudoku)
-    #user_fill_sudoku(sudoku)
-    sudoku.get_candidates()
-    #sudoku.print_possible()
+def solve_sudoku(sudoku, limit=81):
     iterations = 0
+    solved = True
     while not sudoku.is_solved():
         sudoku.naked_single()
         sudoku.hidden_single()
+        sudoku.naked_pair()
         iterations += 1
-        if iterations > 30:
+        if iterations > limit:
             print("Could't be solved after more than 30 iterations")
+            solved = False
             break
+    return solved
+
+if __name__== "__main__":
+    sudoku = Sudoku("example_puzzles/s04a.txt")
     print(sudoku)
-    #print("Check if correct: ", sudoku.is_correct())
+    #user_fill_sudoku(sudoku)
+    sudoku.get_candidates()
+    sudoku.print_possible()
+
+
+    solved = solve_sudoku(sudoku, limit=30)
+    print(sudoku)
+
+    if solved: print("Check if correct: ", sudoku.is_correct())
