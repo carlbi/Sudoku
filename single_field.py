@@ -1,8 +1,8 @@
 # Class for single field in sudoku
 
 class Field():
-    def __init__(self):
-        self.num = None
+    def __init__(self, number=None):
+        self.num = number
         self.placeholder = None
         self.pos = list(range(1,10))
     def __str__(self):
@@ -25,4 +25,5 @@ class Field():
 
     ''' DELETE '''
     def delPos(self, possible):
-        self.pos.remove(possible)
+        if possible in self.pos:
+            self.pos.remove(possible)
