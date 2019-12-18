@@ -27,21 +27,20 @@ def solve_sudoku(sudoku, limit=81):
         sudoku.naked_single()
         sudoku.hidden_single()
         sudoku.naked_pair()
+        sudoku.hidden_pair()
         iterations += 1
         if iterations > limit:
-            print("Could't be solved after more than 30 iterations")
+            print("Could't be solved after more than {} iterations".format(limit))
             solved = False
             break
     return solved
 
 if __name__== "__main__":
-    sudoku = Sudoku("example_puzzles/s04a.txt")
+    sudoku = Sudoku("example_puzzles/s15a.txt")
     print(sudoku)
     #user_fill_sudoku(sudoku)
     sudoku.get_candidates()
     sudoku.print_possible()
-
-
     solved = solve_sudoku(sudoku, limit=30)
     print(sudoku)
 

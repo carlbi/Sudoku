@@ -18,6 +18,9 @@ class Sudoku():
                     number = int(puzzle[i][j])
                     if number > 0: self.field[i][j].setNum(number)
         self.known_naked_pairs = list()
+        self.known_hidden_pairs = list()
+
+    ''' STANDARD FUNCTIONS '''
 
     def is_solved(self):
         solved = True
@@ -39,8 +42,6 @@ class Sudoku():
                     print("--- Box check: ", self.try_box(num, i, j))
         return correct
 
-
-
     def get_candidates(self):
         for i in range(9):
             for j in range(9):
@@ -50,6 +51,7 @@ class Sudoku():
                             self.field[i][j].delPos(cand)
 
     ''' SOLVER FUNCTIONS '''
+
     def naked_single(self):
         for i in range(9):
             for j in range(9):
@@ -75,13 +77,13 @@ class Sudoku():
         # Row
         for i in range(9):
             cands = self.get_row_candidates(i)
-            doubles = [x for x in cands if len(x) == 2]
+            doubles = [x for x in cands if x is not None and len(x) == 2]
             duplicate = self.find_duplicates(doubles)
             if duplicate is not None:
                 np_id = (('R', i), duplicate)
-                if np_id in self.known_naked_pairs: break
-                print("Found naked pair in row {}: {}".format(i+1, duplicate))
+                if np_id in self.known_naked_pairs: continue
                 self.known_naked_pairs.append(np_id)
+                print("Found naked pair in row {}: {}".format(i+1, duplicate))
                 for j in range(9):
                     if self.field[i][j].pos is not None:
                         if tuple(self.field[i][j].pos) != duplicate:
@@ -89,13 +91,13 @@ class Sudoku():
         # Col
         for j in range(9):
             cands = self.get_col_candidates(j)
-            doubles = [x for x in cands if len(x) == 2]
+            doubles = [x for x in cands if x is not None and len(x) == 2]
             duplicate = self.find_duplicates(doubles)
             if duplicate is not None:
                 np_id = (('C', j), duplicate)
-                if np_id in self.known_naked_pairs: break
-                print("Found naked pair in col {}: {}".format(j+1, duplicate))
+                if np_id in self.known_naked_pairs: continue
                 self.known_naked_pairs.append(np_id)
+                print("Found naked pair in col {}: {}".format(j+1, duplicate))
                 for i in range(9):
                     if self.field[i][j].pos is not None:
                         if tuple(self.field[i][j].pos) != duplicate:
@@ -104,11 +106,11 @@ class Sudoku():
         for I in range(0,9,3):
             for J in range(0,9,3):
                 cands = self.get_box_candidates(I,J)
-                doubles = [x for x in cands if len(x) == 2]
+                doubles = [x for x in cands if x is not None and len(x) == 2]
                 duplicate = self.find_duplicates(doubles)
                 if duplicate is not None:
                     np_id = ('B', duplicate)
-                    if np_id in self.known_naked_pairs: break
+                    if np_id in self.known_naked_pairs: continue
                     self.known_naked_pairs.append(np_id)
                     print("Found naked pair in box:", duplicate)
                     for id in self.get_box_ids(I, J, included=True):
@@ -116,6 +118,50 @@ class Sudoku():
                         if self.field[i][j].pos is not None:
                             if tuple(self.field[i][j].pos) != duplicate:
                                 for x in duplicate: self.field[i][j].delPos(x)
+    def hidden_pair(self):
+        # Row
+        for i in range(9):
+            cands = self.get_row_candidates(i)
+            hidden_double = self.hidden_in_list(cands)
+            if len(hidden_double) == 2:
+                hp_id = ('B', hidden_double)
+                if hp_id in self.known_hidden_pairs: continue
+                self.known_hidden_pairs.append(hp_id)
+                print("Found hidden pair in row {}: {}".format(i+1, hidden_double))
+                for j in range(9):
+                    if self.field[i][j].pos is not None:
+                        if hidden_double[0] in self.field[i][j].pos and hidden_double[1] in self.field[i][j].pos:
+                            self.field[i][j].pos = [hidden_double[0], hidden_double[1]]
+
+        # Col
+        for j in range(9):
+            cands = self.get_col_candidates(j)
+            hidden_double = self.hidden_in_list(cands)
+            if len(hidden_double) == 2:
+                hp_id = ('B', hidden_double)
+                if hp_id in self.known_hidden_pairs: continue
+                self.known_hidden_pairs.append(hp_id)
+                print("Found hidden pair in col {}: {}".format(j+1, hidden_double))
+                for i in range(9):
+                    if self.field[i][j].pos is not None:
+                        if hidden_double[0] in self.field[i][j].pos and hidden_double[1] in self.field[i][j].pos:
+                            self.field[i][j].pos = [hidden_double[0], hidden_double[1]]
+
+        # Box
+        for I in range(0,9,3):
+            for J in range(0,9,3):
+                cands = self.get_box_candidates(I,J)
+                hidden_double = self.hidden_in_list(cands)
+                if len(hidden_double) == 2:
+                    hp_id = ('B', hidden_double)
+                    if hp_id in self.known_hidden_pairs: continue
+                    self.known_hidden_pairs.append(hp_id)
+                    print("Found hidden pair in box: {}".format(hidden_double))
+                    for id in self.get_box_ids(I, J, included=True):
+                        i,j = id
+                        if self.field[i][j].pos is not None:
+                            if hidden_double[0] in self.field[i][j].pos and hidden_double[1] in self.field[i][j].pos:
+                                self.field[i][j].pos = [hidden_double[0], hidden_double[1]]
 
     ''' HELPER FUNCTIONS '''
 
@@ -176,25 +222,42 @@ class Sudoku():
         return ids
 
     def find_duplicates(self, cand_list):
-    #Check if given list contains any duplicates
+        #Check if given list contains any duplicates
         cand_set = set()
         for elem in map(tuple, cand_list):
             if elem in cand_set: return elem
             else: cand_set.add(elem)
         return None
 
+    def hidden_in_list(self, cands):
+        occurences = [None]*9
+        for num in range(9):
+            occurences[num] = [x for x in range(9) if cands[x] is not None and cands[x].count(num+1) != 0]
+            if len(occurences[num]) != 2: occurences[num] = None
+        hidden_double = list()
+        for num in range(9):
+            if occurences[num] is not None and occurences.count(occurences[num]) > 1:
+                hidden_double.append(num+1)
+        return hidden_double
+
     def get_row_candidates(self, row):
         # returns a list of all possibles in given row
         row_candidates = list()
         for j in range(9):
-            if self.field[row][j].pos is not None: row_candidates.append(self.field[row][j].pos)
+            if self.field[row][j].pos is not None:
+                row_candidates.append(self.field[row][j].pos)
+            else:
+                row_candidates.append(None)
         return row_candidates
 
     def get_col_candidates(self, col):
         # returns a list of all possibles in given col
         col_candidates = list()
         for i in range(9):
-            if self.field[i][col].pos is not None: col_candidates.append(self.field[i][col].pos)
+            if self.field[i][col].pos is not None:
+                col_candidates.append(self.field[i][col].pos)
+            else:
+                col_candidates.append(None)
         return col_candidates
 
     def get_box_candidates(self, row, col):
@@ -202,10 +265,14 @@ class Sudoku():
         box_candidates = list()
         for id in self.get_box_ids(row, col, included=True):
             i,j = id
-            if self.field[i][j].pos is not None: box_candidates.append(self.field[i][j].pos)
+            if self.field[i][j].pos is not None:
+                box_candidates.append(self.field[i][j].pos)
+            else:
+                box_candidates.append(None)
         return box_candidates
 
     ''' PRINT FUNCTIONS '''
+
     def __str__(self):
         str = "\n#####################"
         for i in range(9):
