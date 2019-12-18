@@ -28,9 +28,11 @@ def solve_sudoku(sudoku, limit=81):
         sudoku.hidden_single()
         sudoku.naked_pair()
         sudoku.hidden_pair()
+        sudoku.pointing_pair()
         iterations += 1
         if iterations > limit:
             print("Could't be solved after more than {} iterations".format(limit))
+            #sudoku.print_possible()
             solved = False
             break
     return solved

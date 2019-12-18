@@ -1,5 +1,6 @@
 # Class for full sudoku
 import sys
+import math
 from termcolor import colored, cprint
 from single_field import Field
 from collections import Counter
@@ -19,6 +20,7 @@ class Sudoku():
                     if number > 0: self.field[i][j].setNum(number)
         self.known_naked_pairs = list()
         self.known_hidden_pairs = list()
+        self.known_pointing_pairs = list()
 
     ''' STANDARD FUNCTIONS '''
 
@@ -163,6 +165,40 @@ class Sudoku():
                             if hidden_double[0] in self.field[i][j].pos and hidden_double[1] in self.field[i][j].pos:
                                 self.field[i][j].pos = [hidden_double[0], hidden_double[1]]
 
+    def pointing_pair(self):
+        # Row
+        for I in range(9):
+            cands = self.get_row_candidates(I)
+            occurences = [None]*9
+            for num in range(9):
+                occurences[num] = [x for x in range(9) if cands[x] is not None and cands[x].count(num+1) != 0]
+                for box in range(3):
+                    if len(occurences[num]) > 1 and all(math.floor(J/3) == box for J in occurences[num]):
+                        for id in self.get_box_ids(I, box*3):
+                            i, j = id
+                            if i != I and self.field[i][j].pos is not None :
+                                pp_id = (('R', I), num+1)
+                                if pp_id in self.known_pointing_pairs: continue
+                                self.known_pointing_pairs.append(pp_id)
+                                print("Found pointing pair in row {}: {}".format(I+1, num+1))
+                                self.field[i][j].delPos(num+1)
+        # Col
+        for J in range(9):
+            cands = self.get_col_candidates(J)
+            occurences = [None]*9
+            for num in range(9):
+                occurences[num] = [x for x in range(9) if cands[x] is not None and cands[x].count(num+1) != 0]
+                for box in range(3):
+                    if len(occurences[num]) > 1 and all(math.floor(I/3) == box for I in occurences[num]):
+                        for id in self.get_box_ids(box*3, J):
+                            i, j = id
+                            if j != J and self.field[i][j].pos is not None :
+                                pp_id = (('C', J), num+1)
+                                if pp_id in self.known_pointing_pairs: continue
+                                self.known_pointing_pairs.append(pp_id)
+                                print("Found pointing pair in col {}: {}".format(J+1, num+1))
+                                self.field[i][j].delPos(num+1)
+
     ''' HELPER FUNCTIONS '''
 
     def new_solve(self, sol, row, col, type):
@@ -209,7 +245,7 @@ class Sudoku():
         return check
 
     def get_box_ids(self, row, col, included=False):
-        # helper function for try_box to get indices of other fields in box
+        # helper function to get indices of other fields in box
         base_row = row - row%3
         base_col = col - col%3
         ids = list()
