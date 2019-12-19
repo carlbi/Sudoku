@@ -19,6 +19,8 @@ def user_fill_sudoku(sudoku):
                 sudoku.field[i][j].setPlaceholder("_")
             else:
                 sudoku.field[i][j].setNum(input)
+                sudoku.field[i][j].fixed = True
+
     print(sudoku)
 
 def solve_sudoku(sudoku, limit=81):
@@ -60,13 +62,19 @@ def load_and_solve(name, brute_force=False):
         print("Check if correct: ", sudoku.is_correct())
         print("Solved in {} ms".format(round(time_to_solve*1000)))
 
-def enter_and_solve():
+def enter_and_solve(brute_force=False):
     sudoku = Sudoku()
     user_fill_sudoku(sudoku)
     print(sudoku)
-    sudoku.get_candidates()
-    t = time.time()
-    solved = solve_sudoku(sudoku, limit=30)
+    if brute_force:
+        t = time.time()
+        solved = brute_force_sudoku(sudoku)
+        time_to_solve = time.time() - t
+    else:
+        sudoku.get_candidates()
+        t = time.time()
+        solved = solve_sudoku(sudoku, limit=30)
+        time_to_solve = time.time() - t
     time_to_solve = time.time() - t
     print(sudoku)
     if solved:
@@ -74,5 +82,5 @@ def enter_and_solve():
         print("Solved in {} ms".format(round(time_to_solve*1000)))
 
 if __name__== "__main__":
-    load_and_solve("s10a", brute_force=True)
-    load_and_solve("s10a")
+    load_and_solve("s15a", brute_force=True)
+    #enter_and_solve(brute_force=True)

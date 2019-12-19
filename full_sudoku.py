@@ -17,7 +17,10 @@ class Sudoku():
             for i in range(9):
                 for j in range(9):
                     number = int(puzzle[i][j])
-                    if number > 0: self.field[i][j].setNum(number)
+                    if number > 0:
+                        self.field[i][j].setNum(number)
+                        self.field[i][j].fixed = True
+
         self.known_naked_pairs = list()
         self.known_hidden_pairs = list()
         self.known_pointing_pairs = list()
@@ -25,24 +28,20 @@ class Sudoku():
     ''' BRUTE FORCE SOLVER '''
 
     def brute_force(self):
-        # Mark given numbers as fixed
-        for i in range(9):
-            for j in range(9):
-                if self.field[i][j].num is not None:
-                    self.field[i][j].fixed = True
         # Solve brute force
         i = 0 # row iterator
         j = 0 # col_iterator
         while self.field[i][j].fixed: i,j = self.next_field(i,j)
+        counter = 0
         while 1:
+            counter += 1
             if i == 9: break
             else:
                 found_possible = False
                 num = self.field[i][j].num
                 current = 0 if num is None else num
                 for num in range(current+1,10):
-                    if self.check_num(num, i, j): continue
-                    else:
+                    if not self.check_num(num, i, j):
                         self.field[i][j].num = num
                         i,j = self.next_field(i,j)
                         found_possible = True
@@ -50,6 +49,7 @@ class Sudoku():
                 if not found_possible:
                     self.field[i][j].num = None
                     i,j = self.last_field(i,j)
+        print("Solved after {} trials".format(counter))
 
     ''' HELPER FUNCTIONS FOR BRUTE FORCE '''
 
