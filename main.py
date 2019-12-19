@@ -1,6 +1,7 @@
 # Main
 import readchar
 import sys
+import time
 from termcolor import colored, cprint
 from full_sudoku import Sudoku
 from single_field import Field
@@ -24,10 +25,10 @@ def solve_sudoku(sudoku, limit=81):
     iterations = 0
     solved = True
     while not sudoku.is_solved():
-        sudoku.naked_single()
         sudoku.hidden_single()
-        sudoku.naked_pair()
+        sudoku.naked_single()
         sudoku.hidden_pair()
+        sudoku.naked_pair()
         sudoku.pointing_pair()
         iterations += 1
         if iterations > limit:
@@ -37,13 +38,41 @@ def solve_sudoku(sudoku, limit=81):
             break
     return solved
 
-if __name__== "__main__":
-    sudoku = Sudoku("example_puzzles/s15a.txt")
-    print(sudoku)
-    #user_fill_sudoku(sudoku)
-    sudoku.get_candidates()
-    sudoku.print_possible()
-    solved = solve_sudoku(sudoku, limit=30)
-    print(sudoku)
+def brute_force_sudoku(sudoku, limit=1000):
+    solved = True
+    sudoku.brute_force()
+    return solved
 
-    if solved: print("Check if correct: ", sudoku.is_correct())
+def load_and_solve(name, brute_force=False):
+    sudoku = Sudoku("example_puzzles/{}.txt".format(name))
+    print(sudoku)
+    if brute_force:
+        t = time.time()
+        solved = brute_force_sudoku(sudoku)
+        time_to_solve = time.time() - t
+    else:
+        sudoku.get_candidates()
+        t = time.time()
+        solved = solve_sudoku(sudoku, limit=30)
+        time_to_solve = time.time() - t
+    print(sudoku)
+    if solved:
+        print("Check if correct: ", sudoku.is_correct())
+        print("Solved in {} ms".format(round(time_to_solve*1000)))
+
+def enter_and_solve():
+    sudoku = Sudoku()
+    user_fill_sudoku(sudoku)
+    print(sudoku)
+    sudoku.get_candidates()
+    t = time.time()
+    solved = solve_sudoku(sudoku, limit=30)
+    time_to_solve = time.time() - t
+    print(sudoku)
+    if solved:
+        print("Check if correct: ", sudoku.is_correct())
+        print("Solved in {} ms".format(round(time_to_solve*1000)))
+
+if __name__== "__main__":
+    load_and_solve("s10a", brute_force=True)
+    load_and_solve("s10a")

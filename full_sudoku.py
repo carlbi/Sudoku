@@ -22,6 +22,64 @@ class Sudoku():
         self.known_hidden_pairs = list()
         self.known_pointing_pairs = list()
 
+    ''' BRUTE FORCE SOLVER '''
+
+    def brute_force(self):
+        # Mark given numbers as fixed
+        for i in range(9):
+            for j in range(9):
+                if self.field[i][j].num is not None:
+                    self.field[i][j].fixed = True
+        # Solve brute force
+        i = 0 # row iterator
+        j = 0 # col_iterator
+        while self.field[i][j].fixed: i,j = self.next_field(i,j)
+        while 1:
+            if i == 9: break
+            else:
+                found_possible = False
+                num = self.field[i][j].num
+                current = 0 if num is None else num
+                for num in range(current+1,10):
+                    if self.check_num(num, i, j): continue
+                    else:
+                        self.field[i][j].num = num
+                        i,j = self.next_field(i,j)
+                        found_possible = True
+                        break
+                if not found_possible:
+                    self.field[i][j].num = None
+                    i,j = self.last_field(i,j)
+
+    ''' HELPER FUNCTIONS FOR BRUTE FORCE '''
+
+    def next_field(self, i,j):
+        if j == 8:
+            next_i = i+1
+            next_j = 0
+        else:
+            next_i = i
+            next_j = j+1
+        try:
+            while(self.field[next_i][next_j].fixed):
+                next_i, next_j = self.next_field(next_i,next_j)
+        finally:
+            return next_i,next_j
+
+    def last_field(self, i,j):
+        if j == 0:
+            last_i = i-1
+            last_j = 8
+        else:
+            last_i = i
+            last_j = j-1
+        while(self.field[last_i][last_j].fixed):
+            last_i, last_j = self.last_field(last_i,last_j)
+        return last_i,last_j
+
+    def check_num(self, num, i, j):
+        return self.try_row(num, i, j) or self.try_col(num, i, j) or self.try_box(num, i, j)
+
     ''' STANDARD FUNCTIONS '''
 
     def is_solved(self):
