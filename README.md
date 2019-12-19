@@ -2,7 +2,7 @@
 
 Command Line Sudoku Solver containing one logical and one brute force solver for Python 3
 
-### Load sudoku from test file and solve
+### Load sudoku from text file and solve
 
 To solve an existing sudoku (e.g. one of the example puzzles) please use the following commands
 
